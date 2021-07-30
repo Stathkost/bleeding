@@ -1,49 +1,44 @@
-local fontId
+local effect = false
 
-function GetPed() return PlayerPedId() end
-function GetCar() return GetVehiclePedIsIn(PlayerPedId(),false) end
+function Bleeding(active, ped)
+    if active then
+        SetEntityHealth(ped, GetEntityHealth(ped)-2)
 
+        if not effect then
+            StartScreenEffect('Rampage', 0, true)
+            effect = true
+        end
 
+        ShakeGameplayCam("SMALL_EXPLOSION_SHAKE", 1.0)
+        SetPlayerHealthRechargeMultiplier(PlayerId(), 0.0)
 
-function setBleedingOn(ped)
-	SetEntityHealth(ped,GetEntityHealth(ped)-2)
-	if not effect then
-   StartScreenEffect('Rampage', 0, true)
-   effect = true
-   end
-   SetTextFont(fontId)
-	ShakeGameplayCam("SMALL_EXPLOSION_SHAKE", 1.0)
-	InfoRanny(Config.text)
-	SetPlayerHealthRechargeMultiplier(PlayerId(), 0.0)
-	Wait(7000)
+        InfoRanny(Config.text)
+        Citizen.Wait(7000)
+    else
+        effect = false
+        StopScreenEffect('Rampage')
+        SetPlayerHealthRechargeMultiplier(PlayerId(), 1.0)
+    end
+end
+
  
- end
- 
- function setBleedingOff(ped)
-	effect = false
-	StopScreenEffect('Rampage')
-	SetPlayerHealthRechargeMultiplier(PlayerId(), 1.0)
- end
- 
- local effect = false
- 
- Citizen.CreateThread(function()
- while true do
- Wait(0)
- local player = GetPlayerPed(-1)
- local Health = GetEntityHealth(player)
- 
-  if Health <= 139  then
-	 setBleedingOn(player)
- 
-  elseif Health > 140 then
-	setBleedingOff(player)
-  end
- end
- end)
+Citizen.CreateThread(function()
+    while true do
+        local player = PlayerPedId()
+        local Health = GetEntityHealth(player)
+        
+        if Health <= 139 then
+            Bleeding(true, player)
+        else
+            Bleeding(false)
+        end
+
+        Citizen.Wait(2000)
+    end
+end)
   
- function InfoRanny(text)
- SetNotificationTextEntry("STRING")
- AddTextComponentString(text)
- DrawNotification(false, false)
- end
+function InfoRanny(text)
+    SetNotificationTextEntry("STRING")
+    AddTextComponentString(text)
+    DrawNotification(false, false)
+end
